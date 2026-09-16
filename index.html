@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoSense - Emotional Intelligence AI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .bg-animation span {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 25s infinite;
+            border-radius: 50%;
+        }
+
+        .bg-animation span:nth-child(1) { left: 25%; animation-delay: 0s; }
+        .bg-animation span:nth-child(2) { left: 10%; animation-delay: 2s; }
+        .bg-animation span:nth-child(3) { left: 70%; animation-delay: 4s; }
+
+        @keyframes float {
+            0% { top: 100vh; opacity: 1; }
+            100% { top: -10vh; opacity: 0; transform: translateX(100px) rotate(720deg); }
+        }
+
+        .app-wrapper {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .sidebar {
+            width: 340px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .brand {
+            padding: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 24px;
+            color: white;
+            text-align: center;
+        }
+
+        .brand-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .brand h1 { font-size: 2rem; font-weight: 800; margin-bottom: 5px; }
+        .brand p { opacity: 0.9; font-size: 0.9rem; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 20px 10px;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 16px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label { font-size: 0.8rem; color: #64748b; margin-top: 5px; }
+
+        .emotion-section { padding: 20px; max-height: 400px; overflow-y: auto; }
+        
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+
+        .emotion-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .emotion-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .emotion-label { flex: 1; font-size: 0.9rem; font-weight: 600; }
+
+        .emotion-bar {
+            flex: 2;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .emotion-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .emotion-value { min-width: 45px; text-align: right; font-size: 0.85rem; font-weight: 700; }
+
+        .chat-container { flex: 1; display: flex; flex-direction: column; }
+
+        .chat-header {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .chat-title { font-size: 1.5rem; font-weight: 700; }
+
+        .chat-controls { display: flex; gap: 10px; }
+
+        .control-btn {
+            padding: 10px 20px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .control-btn.danger:hover { border-color: var(--error); color: var(--error); }
+
+        .messages-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .welcome {
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .welcome-icon {
+            font-size: 5rem;
+            background: linear-gradient(135deg, var(--primary), #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .welcome h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 15px; }
+        .welcome p { font-size: 1.1rem; color: #64748b; line-height: 1.6; max-width: 600px; margin: 0 auto 40px; }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .feature {
+            padding: 25px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            text-align: left;
+            transition: transform 0.3s;
+        }
+
+        .feature:hover { transform: translateY(-5px); }
+        .feature-icon { font-size: 2rem; color: var(--primary); margin-bottom: 10px; }
+        .feature h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .feature p { font-size: 0.9rem; color: #64748b; line-height: 1.5; margin: 0; }
+
+        .message {
+            display: flex;
+            gap: 15px;
+            max-width: 75%;
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user { margin-left: auto; flex-direction: row-reverse; }
+
+        .message-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+        .message.bot .message-avatar { background: linear-gradient(135deg, #f093fb, #ff9a9e); }
+
+        .message-content {
+            background: white;
+            padding: 18px 22px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .message-text { line-height: 1.6; font-size: 1rem; }
+
+        .emotion-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 20px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .supportive-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 12px;
+            border-left: 4px solid var(--warning);
+        }
+
+        .supportive-box strong { display: block; margin-bottom: 8px; color: #92400e; }
+
+        .input-area { padding: 25px 30px; border-top: 1px solid #e2e8f0; }
+        .input-wrapper { display: flex; gap: 15px; align-items: flex-end; }
+
+        .input-field {
+            flex: 1;
+            padding: 18px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: none;
+            min-height: 60px;
+            max-height: 150px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .send-btn:hover:not(:disabled) { transform: scale(1.1); }
+        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .voice-controls { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
+
+        .voice-btn {
+            width: 55px;
+            height: 55px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .voice-btn:hover { transform: scale(1.1); }
+        .voice-btn.listening {
+            background: linear-gradient(135deg, var(--success), #059669);
+            animation: pulse-voice 1.5s infinite;
+        }
+
+        @keyframes pulse-voice {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+        }
+
+        .typing {
+            display: flex;
+            gap: 5px;
+            padding: 15px 20px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        @media (max-width: 768px) {
+            .app-wrapper { flex-direction: column; padding: 10px; }
+            .sidebar { width: 100%; }
+            .features { grid-template-columns: 1fr; }
+            .message { max-width: 90%; }
+        }
+    </style>
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { 
+        getAuth, 
+        onAuthStateChanged,
+        signOut
+    } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB7BZFWS3JkTFZ_c8sl8E315-4LaWuXfrk",
+        authDomain: "echosense-ac4cb.firebaseapp.com",
+        projectId: "echosense-ac4cb",
+        storageBucket: "echosense-ac4cb.firebasestorage.app",
+        messagingSenderId: "42422010561",
+        appId: "1:42422010561:web:60446884538bdcf49d0a40",
+        measurementId: "G-DSH8GNNSX3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window.auth = getAuth(app); 
+    window.signOut = signOut;   
+    window.onAuthStateChanged = onAuthStateChanged; 
+</script>
+</head>
+<body>
+    <div class="bg-animation">
+        <span></span><span></span><span></span>
+    </div>
+
+    <div class="app-wrapper">
+        <div class="sidebar">
+            <div class="brand">
+                <div class="brand-icon"><i class="fas fa-brain"></i></div>
+                <h1>EchoSense</h1>
+                <p>AI Emotional Intelligence</p>
+            </div>
+
+            <div class="glass-card stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="messageCount">0</div>
+                    <div class="stat-label">Messages</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="sessionTime">0m</div>
+                    <div class="stat-label">Duration</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="voiceCount">0</div>
+                    <div class="stat-label">Voice</div>
+                </div>
+            </div>
+
+            <div class="glass-card emotion-section">
+                <div class="section-title">Emotion Analysis</div>
+                <div id="emotionMeter">
+                    <div class="emotion-item">
+                        <div class="emotion-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);"><i class="fas fa-heart-broken"></i></div>
+                        <span class="emotion-label">Sadness</span>
+                        <div class="emotion-bar"><div class="emotion-fill" style="width: 0%; background: linear-gradient(135deg, #ef4444, #dc2626);"></div></div>
+                        <span class="emotion-value">0%</span>
+                    </div>
+                    <div class="emotion-item">
+                        <div class="emotion-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);"><i class="fas fa-fire"></i></div>
+                        <span class="emotion-label">Anger</span>
+                        <div class="emotion-bar"><div class="emotion-fill" style="width: 0%; background: linear-gradient(135deg, #f97316, #ea580c);"></div></div>
+                        <span class="emotion-value">0%</span>
+                    </div>
+                    <div class="emotion-item">
+                        <div class="emotion-icon" style="background: linear-gradient(135deg, #eab308, #ca8a04);"><i class="fas fa-exclamation-triangle"></i></div>
+                        <span class="emotion-label">Anxiety</span>
+                        <div class="emotion-bar"><div class="emotion-fill" style="width: 0%; background: linear-gradient(135deg, #eab308, #ca8a04);"></div></div>
+                        <span class="emotion-value">0%</span>
+                    </div>
+                    <div class="emotion-item">
+                        <div class="emotion-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);"><i class="fas fa-user-friends"></i></div>
+                        <span class="emotion-label">Loneliness</span>
+                        <div class="emotion-bar"><div class="emotion-fill" style="width: 0%; background: linear-gradient(135deg, #6366f1, #4f46e5);"></div></div>
+                        <span class="emotion-value">0%</span>
+                    </div>
+                    <div class="emotion-item">
+                        <div class="emotion-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-heart"></i></div>
+                        <span class="emotion-label">Gratitude</span>
+                        <div class="emotion-bar"><div class="emotion-fill" style="width: 0%; background: linear-gradient(135deg, #10b981, #059669);"></div></div>
+                        <span class="emotion-value">0%</span>
+                    </div>
+                    <div class="emotion-item">
+                        <div class="emotion-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-smile"></i></div>
+                        <span class="emotion-label">Joy</span>
+                        <div class="emotion-bar"><div class="emotion-fill" style="width: 0%; background: linear-gradient(135deg, #f59e0b, #d97706);"></div></div>
+                        <span class="emotion-value">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card chat-container">
+            <div class="chat-header">
+                <h2 class="chat-title">Emotional Intelligence Chat</h2>
+                <div class="chat-controls">
+                    <button class="control-btn" id="newChatBtn"><i class="fas fa-plus"></i> New</button>
+                    <button class="control-btn danger" id="closeChatBtn"><i class="fas fa-times"></i> Close</button>
+                    <button class="control-btn danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button> 
+                </div>
+            </div>
+
+            <div class="messages-area" id="messagesArea">
+                <div class="welcome" id="welcomeScreen">
+                    <div class="welcome-icon"><i class="fas fa-brain"></i></div>
+                    <h2>Welcome to EchoSense</h2>
+                    <p>Your AI companion for emotional intelligence. Share your thoughts and feelings, and I'll help you understand them better.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <div class="feature-icon"><i class="fas fa-heart"></i></div>
+                            <h3>AI Emotion Analysis</h3>
+                            <p>Deep contextual understanding of emotions</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon"><i class="fas fa-microphone"></i></div>
+                            <h3>Voice Recognition</h3>
+                            <p>Speak naturally with voice support</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                            <h3>Safe Space</h3>
+                            <p>Judgment-free conversation</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                            <h3>Real-time Insights</h3>
+                            <p>Personalized supportive suggestions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea class="input-field" id="messageInput" placeholder="Share what's on your mind..." rows="1"></textarea>
+                    <button class="send-btn" id="sendBtn" disabled><i class="fas fa-paper-plane"></i></button>
+                </div>
+                <div class="voice-controls">
+                    <button class="voice-btn" id="voiceBtn" title="Click to speak"><i class="fas fa-microphone"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API_BASE_URL = 'http://localhost:5000/api';
+
+    class EchoSenseApp {
+        constructor(user) {
+            this.user = user;
+            this.messages = [];
+            this.sessionStart = new Date();
+            this.voiceCount = 0;
+            this.recognition = null;
+            this.isListening = false;
+            this.sessionId = `session_${user.uid}_${Date.now()}`;
+            this.sessionCreated = false; // PREVENT DUPLICATE SESSIONS
+            
+            this.colors = { success: '#10b981', error: '#ef4444', info: '#667eea', warning: '#f59e0b' };
+
+            this.init();
+        }
+
+        async init() {
+            this.initElements();
+            this.setupEventListeners();
+            this.initVoiceRecognition();
+            this.startTimer();
+            this.updateHeaderInfo();
+            
+            // Create session ONCE
+            if (!this.sessionCreated) {
+                await this.createBackendSession();
+            }
+            
+            const welcomeName = this.user.displayName || (this.user.isAnonymous ? 'Guest' : this.user.email);
+            this.notify(`Welcome, ${welcomeName}!`, 'success');
+        }
+
+        async createBackendSession() {
+            if (this.sessionCreated) return; // STOP DUPLICATES
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/session/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: this.sessionId,
+                        user_id: this.user.uid
+                    })
+                });
+                
+                if (response.ok) {
+                    this.sessionCreated = true;
+                    console.log("Session created:", this.sessionId);
+                } else {
+                    console.error('Failed to create backend session');
+                }
+            } catch (error) {
+                console.error('Backend connection error:', error);
+                this.notify('Backend connection issue - check if Flask is running', 'warning');
+            }
+        }
+
+        async closeBackendSession() {
+            try {
+                await fetch(`${API_BASE_URL}/session/close`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: this.sessionId })
+                });
+                this.sessionCreated = false;
+            } catch (error) {
+                console.error('Failed to close session:', error);
+            }
+        }
+
+        initElements() {
+            this.messagesArea = document.getElementById('messagesArea');
+            this.welcomeScreen = document.getElementById('welcomeScreen');
+            this.messageInput = document.getElementById('messageInput');
+            this.sendBtn = document.getElementById('sendBtn');
+            this.voiceBtn = document.getElementById('voiceBtn');
+            this.newChatBtn = document.getElementById('newChatBtn');
+            this.closeChatBtn = document.getElementById('closeChatBtn');
+            this.logoutBtn = document.getElementById('logoutBtn');
+            this.messageCount = document.getElementById('messageCount');
+            this.sessionTime = document.getElementById('sessionTime');
+            this.voiceCountEl = document.getElementById('voiceCount');
+            this.emotionMeter = document.getElementById('emotionMeter');
+        }
+
+        setupEventListeners() {
+            this.sendBtn.addEventListener('click', () => this.sendMessage());
+            this.messageInput.addEventListener('input', () => {
+                this.sendBtn.disabled = !this.messageInput.value.trim();
+                this.autoResize();
+            });
+            this.messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+            this.voiceBtn.addEventListener('click', () => this.toggleVoice());
+            this.newChatBtn.addEventListener('click', () => this.newChat(true));
+            this.closeChatBtn.addEventListener('click', () => this.newChat(false));
+            this.logoutBtn.addEventListener('click', () => this.logout());
+        }
+        
+        async logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                try {
+                    await this.closeBackendSession();
+                    await window.signOut(window.auth);
+                } catch (error) {
+                    this.notify('Logout failed. Try again.', 'error');
+                    console.error("Logout error:", error);
+                }
+            }
+        }
+        
+        updateHeaderInfo() {
+            const userStatusEl = document.querySelector('.sidebar .brand p');
+            if (!userStatusEl) return;
+
+            const displayName = this.user.displayName;
+
+            if (this.user.isAnonymous) {
+                userStatusEl.textContent = 'Guest Mode Active';
+            } else if (displayName) {
+                userStatusEl.textContent = `Welcome, ${displayName}`;
+            } else {
+                userStatusEl.textContent = this.user.email || 'Signed In';
+            }
+        }
+
+        autoResize() {
+            this.messageInput.style.height = 'auto';
+            this.messageInput.style.height = this.messageInput.scrollHeight + 'px';
+        }
+
+        initVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                this.voiceBtn.disabled = true;
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            this.recognition = new SpeechRecognition();
+            this.recognition.continuous = false;
+            this.recognition.interimResults = true;
+            this.recognition.lang = 'en-US';
+            
+            this.recognition.onstart = () => {
+                this.isListening = true;
+                this.voiceBtn.classList.add('listening');
+            };
+
+            this.recognition.onresult = (event) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                if (finalTranscript) {
+                    this.messageInput.value = finalTranscript;
+                    this.sendBtn.disabled = false;
+                    this.voiceCount++;
+                    this.voiceCountEl.textContent = this.voiceCount;
+                    setTimeout(() => this.sendMessage(), 300);
+                }
+            };
+
+            this.recognition.onerror = () => {
+                this.notify('Voice recognition error', 'error');
+                this.stopVoice();
+            };
+
+            this.recognition.onend = () => {
+                this.isListening = false;
+                this.voiceBtn.classList.remove('listening');
+            };
+        }
+
+        toggleVoice() {
+            if (this.isListening) {
+                this.stopVoice();
+            } else {
+                this.startVoice();
+            }
+        }
+
+        startVoice() {
+            if (!this.recognition) return;
+            try {
+                this.recognition.start();
+                this.notify('Listening...', 'info');
+            } catch (error) {
+                console.error('Voice error:', error);
+            }
+        }
+
+        stopVoice() {
+            if (!this.recognition || !this.isListening) return;
+            this.recognition.stop();
+        }
+
+        async sendMessage() {
+            const text = this.messageInput.value.trim();
+            if (!text) return;
+            
+            if (this.messages.length === 0) {
+                this.welcomeScreen.style.display = 'none';
+            }
+            
+            this.addMessage('user', text);
+            this.messageInput.value = '';
+            this.sendBtn.disabled = true;
+            this.messageInput.style.height = 'auto';
+            
+            this.showTyping();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/message/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: this.sessionId,
+                        message: text
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Backend request failed');
+                }
+                
+                const data = await response.json();
+                
+                this.hideTyping();
+                this.addMessage('bot', data.response, data.emotion_data, data.supportive_action);
+                this.updateEmotions(data.emotion_data);
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                this.hideTyping();
+                this.notify('Failed to get response. Check your OpenAI API key has credits.', 'error');
+            }
+        }
+
+        addMessage(sender, text, analysis = null, action = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.innerHTML = sender === 'user' ? 'U' : '<i class="fas fa-brain"></i>';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            
+            const messageText = document.createElement('div');
+            messageText.className = 'message-text';
+            messageText.textContent = text;
+            content.appendChild(messageText);
+            
+            if (analysis && sender === 'bot') {
+                const badge = document.createElement('div');
+                badge.className = 'emotion-badge';
+                const emotionName = analysis.primary_emotion.charAt(0).toUpperCase() + analysis.primary_emotion.slice(1);
+                const confidencePercent = Math.round(analysis.confidence * 100);
+                badge.innerHTML = `<i class="fas fa-heart"></i> ${emotionName} (${confidencePercent}%)`;
+                content.appendChild(badge);
+            }
+            
+            if (action && action.trim() !== '') {
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'supportive-box';
+                actionDiv.innerHTML = `<strong>Supportive Suggestion:</strong> ${action}`;
+                content.appendChild(actionDiv);
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            this.messagesArea.appendChild(messageDiv);
+            
+            this.messages.push({ sender, text, analysis });
+            this.messageCount.textContent = this.messages.length;
+            this.messagesArea.scrollTop = this.messagesArea.scrollHeight;
+        }
+
+        showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'message bot';
+            typingDiv.innerHTML = `<div class="message-avatar"><i class="fas fa-brain"></i></div><div class="message-content"><div class="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+            this.messagesArea.appendChild(typingDiv);
+            this.messagesArea.scrollTop = this.messagesArea.scrollHeight;
+        }
+
+        hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        updateEmotions(analysis) {
+            const emotions = ['sadness', 'anger', 'anxiety', 'loneliness', 'gratitude', 'joy'];
+            const items = this.emotionMeter.querySelectorAll('.emotion-item');
+            
+            emotions.forEach((emotion, index) => {
+                const confidence = (analysis[emotion] || 0) * 100;
+                const fill = items[index].querySelector('.emotion-fill');
+                const value = items[index].querySelector('.emotion-value');
+                
+                fill.style.width = `${confidence}%`;
+                value.textContent = `${Math.round(confidence)}%`;
+            });
+        }
+
+        async newChat(askConfirmation = true) {
+            const needsConfirmation = askConfirmation && this.messages.length > 0;
+            
+            if (needsConfirmation && !confirm('Start new chat? Current conversation will be lost.')) {
+                return;
+            }
+            
+            await this.closeBackendSession();
+            
+            this.sessionId = `session_${this.user.uid}_${Date.now()}`;
+            this.sessionCreated = false;
+            await this.createBackendSession();
+            
+            this.resetChat();
+            this.notify('New chat started', 'success');
+        }
+        
+        resetChat() {
+            this.messages = [];
+            this.sessionStart = new Date();
+            this.voiceCount = 0;
+            this.messageCount.textContent = '0';
+            this.sessionTime.textContent = '0m';
+            this.voiceCountEl.textContent = '0';
+            this.messagesArea.innerHTML = `
+                <div class="welcome" id="welcomeScreen">
+                    <div class="welcome-icon"><i class="fas fa-brain"></i></div>
+                    <h2>Welcome to EchoSense</h2>
+                    <p>Your AI companion for emotional intelligence. Share your thoughts and feelings.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <div class="feature-icon"><i class="fas fa-heart"></i></div>
+                            <h3>AI Emotion Analysis</h3>
+                            <p>Deep contextual understanding</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon"><i class="fas fa-microphone"></i></div>
+                            <h3>Voice Recognition</h3>
+                            <p>Speak naturally</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                            <h3>Safe Space</h3>
+                            <p>Judgment-free</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                            <h3>Real-time Insights</h3>
+                            <p>Personalized suggestions</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            this.welcomeScreen = document.getElementById('welcomeScreen');
+            
+            const items = this.emotionMeter.querySelectorAll('.emotion-item');
+            items.forEach(item => {
+                item.querySelector('.emotion-fill').style.width = '0%';
+                item.querySelector('.emotion-value').textContent = '0%';
+            });
+        }
+
+        startTimer() {
+            setInterval(() => {
+                const duration = Math.floor((new Date() - this.sessionStart) / 60000);
+                this.sessionTime.textContent = `${duration}m`;
+            }, 60000);
+        }
+
+        notify(message, type = 'info') {
+            const colors = this.colors;
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 30px;
+                right: 30px;
+                background: ${colors[type]};
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-weight: 600;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+    }
+
+    // FIXED: Prevent multiple initializations
+    let appInitialized = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof window.onAuthStateChanged === 'function' && window.auth) {
+            window.onAuthStateChanged(window.auth, user => {
+                if (user && !appInitialized) {
+                    console.log("User authenticated:", user.uid);
+                    appInitialized = true;
+                    new EchoSenseApp(user);
+                } else if (!user) {
+                    console.log("No user detected, redirecting to login");
+                    window.location.href = 'login.html';
+                }
+            });
+        } else {
+            console.error("Firebase Auth not loaded");
+        }
+    });
+</script>
+</body>
+</html>
